@@ -1,11 +1,49 @@
 {
-  "name": "TxtFSM",
+  "name": "txtfsm",
+  "displayName": "TxtFSM",
   "version": "0.1.0",
+  "private": true,
   "description": "TextFSM template parser",
   "license": "Apache-2.0",
   "author": "yuyosy",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yuyosy/txtfsm.git"
+  },
+  "files": [
+    "**"
+  ],
+  "type": "module",
+  "main": "./txtfsm.umd.cjs",
+  "module": "./txtfsm.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./txtfsm.js",
+      "require": "./txtfsm.umd.cjs"
+    }
+  },
+  "scripts": {
+    "build": "vite build && tsc",
+    "package:prepare": "node ./scripts/prepare-package.mjs",
+    "package:preview": "npm run package:prepare && npm pack ./dist --dry-run",
+    "publish:package": "npm publish ./dist",
+    "test": "vitest",
+    "lint": "oxlint --fix",
+    "lint:preview": "oxlint",
+    "fmt": "oxfmt",
+    "fmt:preview": "oxfmt --check"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "oxfmt": "^0.63.0",
+    "oxlint": "^1.78.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }
