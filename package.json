@@ -1,0 +1,11 @@
+{
+  "name": "TxtFSM",
+  "version": "0.1.0",
+  "description": "TextFSM template parser",
+  "license": "Apache-2.0",
+  "author": "yuyosy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yuyosy/txtfsm.git"
+  }
+}
