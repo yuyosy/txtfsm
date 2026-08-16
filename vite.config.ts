@@ -18,6 +18,12 @@ export default defineConfig({
           include: ['tests/unit/*.{test,spec}.ts'],
         },
       },
+      {
+        test: {
+          name: 'compat',
+          include: ['tests/compat/*.{test,spec}.ts'],
+        },
+      },
     ],
   },
 });

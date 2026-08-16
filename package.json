@@ -30,6 +30,9 @@
     "package:preview": "npm run package:prepare && npm pack ./dist --dry-run",
     "publish:package": "npm publish ./dist",
     "test:watch:unit": "vitest --project unit",
+    "test:watch:compat": "vitest --project compat",
+    "test:compat:setup": "node ./scripts/fetch-ntc-templates.mjs",
+    "test:compat": "npm run test:compat:setup && vitest run --project compat",
     "test:unit": "vitest run --project unit",
     "lint": "oxlint --fix",
     "lint:preview": "oxlint",
@@ -38,8 +41,10 @@
   },
   "devDependencies": {
     "@types/node": "^26.2.0",
+    "js-yaml": "4.3.1",
     "oxfmt": "^0.63.0",
     "oxlint": "^1.78.0",
+    "tar": "^7.5.22",
     "typescript": "^7.0.2",
     "vite": "^8.2.1",
     "vitest": "^4.1.10"
