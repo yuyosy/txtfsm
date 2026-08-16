@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 export default defineConfig({
   build: {
@@ -8,5 +9,15 @@ export default defineConfig({
       formats: ['es', 'umd'],
     },
     sourcemap: true,
+  },
+  test: {
+    projects: [
+      {
+        test: {
+          name: 'unit',
+          include: ['tests/unit/*.{test,spec}.ts'],
+        },
+      },
+    ],
   },
 });
