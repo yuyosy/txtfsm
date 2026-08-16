@@ -59,7 +59,9 @@ export function App() {
       </a>
 
       <header class="site-header">
-        <a class="brand" href="#home">TxtFSM</a>
+        <a class="brand" href="#home">
+          TxtFSM
+        </a>
         <nav aria-label="Primary navigation">
           {NAVIGATION.map((item) => (
             <a
@@ -86,7 +88,11 @@ export function App() {
       </main>
 
       <footer>
-        <span>TxtFSM</span>
+        <div class="footer-meta">
+          <span>TxtFSM</span>
+          <span aria-hidden="true">·</span>
+          <a href="https://github.com/yuyosy/txtfsm/blob/main/LICENSE">Apache 2.0</a>
+        </div>
         <div class="footer-meta">
           <a href="https://www.npmjs.com/package/txtfsm" target="_blank" rel="noopener noreferrer">
             npm
@@ -99,8 +105,6 @@ export function App() {
           <span>
             Made by <a href="https://github.com/yuyosy">yuyosy</a>
           </span>
-          <span aria-hidden="true">·</span>
-          <a href="https://github.com/yuyosy/txtfsm/blob/main/LICENSE">Apache 2.0</a>
         </div>
       </footer>
     </>

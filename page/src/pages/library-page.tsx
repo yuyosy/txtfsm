@@ -1,5 +1,12 @@
 import { HighlightedCode } from '../components/highlighted-code';
-import { API_MEMBERS, ERROR_TYPES, TXT_FSM_ERROR_HANDLING_CODE, type ApiEntry } from '../docs';
+import {
+  API_CLASSES,
+  API_FUNCTIONS,
+  API_TYPES,
+  ERROR_TYPES,
+  TXT_FSM_ERROR_HANDLING_CODE,
+  type ApiEntry,
+} from '../docs';
 
 function ApiList({ entries }: { readonly entries: readonly ApiEntry[] }) {
   return (
@@ -31,9 +38,19 @@ export function LibraryPage() {
         </p>
       </header>
 
-      <section class="api-section" aria-labelledby="members-title">
-        <h2 class="api-section-title" id="members-title">Functions and classes</h2>
-        <ApiList entries={API_MEMBERS} />
+      <section class="api-section" aria-labelledby="classes-title">
+        <h2 class="api-section-title" id="classes-title">Classes</h2>
+        <ApiList entries={API_CLASSES} />
+      </section>
+
+      <section class="api-section" aria-labelledby="functions-title">
+        <h2 class="api-section-title" id="functions-title">Functions</h2>
+        <ApiList entries={API_FUNCTIONS} />
+      </section>
+
+      <section class="api-section" aria-labelledby="types-title">
+        <h2 class="api-section-title" id="types-title">Types</h2>
+        <ApiList entries={API_TYPES} />
       </section>
 
       <section class="api-section" aria-labelledby="error-types-title">

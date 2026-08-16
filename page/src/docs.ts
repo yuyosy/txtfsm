@@ -78,30 +78,87 @@ export interface ApiEntry {
   readonly description: string;
 }
 
-export const API_MEMBERS: readonly ApiEntry[] = [
+export const API_CLASSES: readonly ApiEntry[] = [
   {
     name: 'TxtFSM',
-    signature: 'new TxtFSM(template)',
+    signature: 'new TxtFSM(template: string): TxtFSM',
     description:
-      'Creates a reusable parser. Use parseText for rows, parseTextToDicts for objects, and header to inspect the output columns.',
+      'Validates and compiles a template into a reusable parser. The readonly header property lists output columns in template declaration order.',
   },
   {
-    name: 'parseText',
-    signature: 'parseText(template, input)',
+    name: 'TxtFSM.parseText',
+    signature: 'parser.parseText(input: string, options?: ParseOptions): string[][]',
     description:
-      'Parses once and returns string[][] data. Column order follows the Value declarations in the template.',
+      'Returns rows in the same column order as parser.header. Pass { eof: false } to disable the implicit EOF record operation.',
   },
   {
-    name: 'parseTextToDicts',
-    signature: 'parseTextToDicts(template, input)',
+    name: 'TxtFSM.parseTextToDicts',
+    signature:
+      'parser.parseTextToDicts(input: string, options?: ParseOptions): Array<Record<string, string>>',
     description:
-      'Parses once and returns an array of objects keyed by the template Value names. This is the shortest path for most applications.',
+      'Returns records keyed by the template Value names. Pass { eof: false } to disable the implicit EOF record operation.',
   },
   {
     name: 'CliTable',
-    signature: 'new CliTable(index, loadTemplate)',
+    signature: 'new CliTable(index: string, loadTemplate: TemplateLoader): CliTable',
     description:
-      'Selects one or more templates from a TextFSM index and parses command output using platform and command attributes.',
+      'Creates a selector from a TextFSM CLI table index and a loader that returns template text by file name.',
+  },
+  {
+    name: 'CliTable.parseCmd',
+    signature:
+      'table.parseCmd(input: string, attributes: CliAttributes): Array<Record<string, string>>',
+    description:
+      'Selects templates using attributes such as Platform and Command. It supports abbreviated patterns such as sh[[ow]] and merges colon-separated templates using Value fields marked Key.',
+  },
+];
+
+export const API_FUNCTIONS: readonly ApiEntry[] = [
+  {
+    name: 'parseText',
+    signature: 'parseText(template: string, input: string): string[][]',
+    description:
+      'Creates a parser for one-off use and returns rows. Column order follows the Value declarations in the template.',
+  },
+  {
+    name: 'parseTextToDicts',
+    signature:
+      'parseTextToDicts(template: string, input: string): Array<Record<string, string>>',
+    description:
+      'Creates a parser for one-off use and returns records keyed by the template Value names. This is the shortest path for most applications.',
+  },
+  {
+    name: 'parseTemplate',
+    signature: 'parseTemplate(source: string): TemplateDefinition',
+    description:
+      'Validates and compiles a template, returning its Value definitions, state map, and Start state. Invalid templates throw TxtFSMTemplateError.',
+  },
+];
+
+export const API_TYPES: readonly ApiEntry[] = [
+  {
+    name: 'ParseOptions',
+    signature: 'interface ParseOptions { readonly eof?: boolean }',
+    description:
+      'Controls parser behavior. eof defaults to true; set it to false to skip the implicit EOF record operation.',
+  },
+  {
+    name: 'TemplateDefinition',
+    signature: '{ values: ValueDefinition[]; states: Map<string, StateDefinition>; startState: StateDefinition }',
+    description:
+      'The validated template structure returned by parseTemplate, including compiled rules in each state.',
+  },
+  {
+    name: 'TemplateLoader',
+    signature: '(name: string) => string | undefined',
+    description:
+      'Loads template text for a file name selected from a CliTable index. Return undefined when a template cannot be found.',
+  },
+  {
+    name: 'CliAttributes',
+    signature: 'Readonly<Record<string, string>>',
+    description:
+      'Values matched against columns in a CliTable index, commonly Platform and Command.',
   },
 ];
 
