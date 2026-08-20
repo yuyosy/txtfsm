@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { load } from 'js-yaml';
 import { describe, expect, it } from 'vitest';
 import { CliTable } from '../../src/index';
+import type { TextFSMRecord, TextFSMValue } from '../../src/index';
 
 interface CompatibilityCase {
   readonly id: string;
@@ -157,19 +158,32 @@ async function resolveExpectationPath(
   return undefined;
 }
 
-function normalizeActual(records: Record<string, string>[]): Record<string, string>[] {
+function normalizeValue(value: unknown): TextFSMValue {
+  if (Array.isArray(value)) {
+    return value.map((item) => (item == null ? '' : String(item)));
+  }
+  return value == null ? '' : String(value);
+}
+
+function hasNormalizedValue(value: TextFSMValue): boolean {
+  return Array.isArray(value)
+    ? value.some((item) => item.trim().length > 0)
+    : value.trim().length > 0;
+}
+
+function normalizeActual(records: TextFSMRecord[]): TextFSMRecord[] {
   return records
     .map((record) => {
-      const normalized: Record<string, string> = {};
+      const normalized: TextFSMRecord = {};
       for (const [key, value] of Object.entries(record)) {
-        normalized[key.toLowerCase()] = value ?? '';
+        normalized[key.toLowerCase()] = normalizeValue(value);
       }
       return normalized;
     })
-    .filter((record) => Object.values(record).some((value) => (value ?? '').trim().length > 0));
+    .filter((record) => Object.values(record).some(hasNormalizedValue));
 }
 
-function normalizeExpected(raw: unknown): Record<string, string>[] {
+function normalizeExpected(raw: unknown): TextFSMRecord[] {
   if (!raw || typeof raw !== 'object') {
     return [];
   }
@@ -178,9 +192,9 @@ function normalizeExpected(raw: unknown): Record<string, string>[] {
     : [];
 
   return parsedSample.map((row) => {
-    const normalized: Record<string, string> = {};
+    const normalized: TextFSMRecord = {};
     for (const [key, value] of Object.entries(row)) {
-      normalized[key] = value == null ? '' : String(value);
+      normalized[key] = normalizeValue(value);
     }
     return normalized;
   });
@@ -193,6 +207,18 @@ const indexSource =
 const compatFlag = process.env.NTC_COMPAT?.toLowerCase();
 const shouldSkip = Boolean(compatFlag?.match(/^(0|false|skip)$/));
 const describeFn = shouldSkip ? describe.skip : describe;
+
+describe('NTC value normalization', () => {
+  it('preserves list values in expected records', () => {
+    expect(normalizeExpected({ parsed_sample: [{ vlan: ['10', '11'] }] })).toEqual([
+      { vlan: ['10', '11'] },
+    ]);
+  });
+
+  it('preserves list values and normalizes keys in actual records', () => {
+    expect(normalizeActual([{ VLAN: ['10', '11'] }])).toEqual([{ vlan: ['10', '11'] }]);
+  });
+});
 
 describeFn('NTC template compatibility', () => {
   if (compatibilityCases.length === 0) {
