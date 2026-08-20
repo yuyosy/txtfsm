@@ -7,6 +7,7 @@
  */
 
 import { TxtFSM } from './txtfsm.js';
+import type { TextFSMRecord, TextFSMValue } from './txtfsm.js';
 
 export type TemplateLoader = (name: string) => string | undefined;
 export type CliAttributes = Readonly<Record<string, string>>;
@@ -104,11 +105,15 @@ function rowMatches(row: IndexRow, attributes: CliAttributes): boolean {
   return true;
 }
 
-function keyForRow(row: Record<string, string>, keys: readonly string[], rowIndex: number): string {
+function keyPart(value: TextFSMValue | undefined): string {
+  return Array.isArray(value) ? JSON.stringify(value) : (value ?? '');
+}
+
+function keyForRow(row: TextFSMRecord, keys: readonly string[], rowIndex: number): string {
   if (keys.length === 0) {
     return String(rowIndex);
   }
-  return keys.map((key) => row[key] ?? '').join('\u0000');
+  return keys.map((key) => keyPart(row[key])).join('\u0000');
 }
 
 export class CliTable {
@@ -120,7 +125,7 @@ export class CliTable {
     this.templateLoader = templateLoader;
   }
 
-  parseCmd(input: string, attributes: CliAttributes): Array<Record<string, string>> {
+  parseCmd(input: string, attributes: CliAttributes): TextFSMRecord[] {
     const selected = this.rows.find((row) => rowMatches(row, attributes));
     if (!selected) {
       throw new CliTableError(`No template found for attributes: ${JSON.stringify(attributes)}`);

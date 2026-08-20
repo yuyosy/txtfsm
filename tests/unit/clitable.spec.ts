@@ -37,6 +37,25 @@ describe('CliTable', () => {
     ).toEqual([{ ID: '1', STATE: 'up', DESCRIPTION: '' }]);
   });
 
+  it('preserves list values in parsed records', () => {
+    const listIndex = `Template, Platform, Command
+tags.txtfsm, demo_os, sh[[ow]] tags`;
+    const listTemplate = `Value List TAG (\\w+)
+Start
+  ^Tag \${TAG} -> NoRecord
+  ^Apply -> Record`;
+    const table = new CliTable(listIndex, (name) =>
+      name === 'tags.txtfsm' ? listTemplate : undefined,
+    );
+
+    expect(
+      table.parseCmd('Tag red\nTag blue\nApply', {
+        Platform: 'demo_os',
+        Command: 'show tags',
+      }),
+    ).toEqual([{ TAG: ['red', 'blue'] }]);
+  });
+
   it('throws when no index row matches', () => {
     const table = new CliTable(index, (name) => templates[name]);
     expect(() => table.parseCmd('', { Platform: 'other', Command: 'show items' })).toThrow(

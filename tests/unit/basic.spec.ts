@@ -196,8 +196,36 @@ describe('TxtFSM', () => {
     const rows = fsm.parseText(LIST_INPUT);
 
     expect(rows).toEqual([
-      ['Gi0/1', '10,11'],
-      ['Gi0/2', ''],
+      ['Gi0/1', ['10', '11']],
+      ['Gi0/2', []],
+    ]);
+
+    const dictFsm = new TxtFSM(LIST_TEMPLATE);
+    expect(dictFsm.parseTextToDicts(LIST_INPUT)).toEqual([
+      { INTERFACE: 'Gi0/1', VLAN: ['10', '11'] },
+      { INTERFACE: 'Gi0/2', VLAN: [] },
+    ]);
+  });
+
+  it('keeps empty string captures in list values', () => {
+    const fsm = new TxtFSM(`Value List LOCATION (.*)
+Start
+  ^Location: \${LOCATION} -> Record`);
+
+    expect(fsm.parseText('Location: ')).toEqual([[['']]]);
+  });
+
+  it('retains cumulative list values when combined with Filldown', () => {
+    const fsm = new TxtFSM(`Value Required ROW (\\w+)
+Value List,Filldown ITEM (\\w+)
+Start
+  ^Item: \${ITEM} -> NoRecord
+  ^Row: \${ROW} -> Record`);
+
+    expect(fsm.parseText('Row: zero\nItem: a\nItem: b\nRow: one\nItem: c\nRow: two')).toEqual([
+      ['zero', []],
+      ['one', ['a', 'b']],
+      ['two', ['a', 'b', 'c']],
     ]);
   });
 

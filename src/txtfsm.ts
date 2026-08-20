@@ -19,6 +19,14 @@ export interface ParseOptions {
   readonly eof?: boolean;
 }
 
+export type TextFSMValue = string | string[];
+export type TextFSMRow = TextFSMValue[];
+export type TextFSMRecord = Record<string, TextFSMValue>;
+
+function hasValue(value: TextFSMValue): boolean {
+  return Array.isArray(value) ? value.length > 0 : value.trim().length > 0;
+}
+
 export class TxtFSM {
   private readonly definition: TemplateDefinition;
   private readonly valueNames: readonly string[];
@@ -49,9 +57,9 @@ export class TxtFSM {
     this.header = this.valueNames;
   }
 
-  parseText(text: string, options: ParseOptions = {}): string[][] {
+  parseText(text: string, options: ParseOptions = {}): TextFSMRow[] {
     const { eof = true } = options;
-    const rows: string[][] = [];
+    const rows: TextFSMRow[] = [];
     const lines = this.splitLines(text);
     let currentStateName = this.definition.startState.name;
     let terminate = false;
@@ -124,7 +132,7 @@ export class TxtFSM {
     if (this.hasPendingRecord()) {
       try {
         const row = this.buildRow();
-        if (row.some((value) => value.trim().length > 0)) {
+        if (row.some(hasValue)) {
           rows.push(row);
           this.registerFillupPendingRows(rows, rows.length - 1);
         }
@@ -182,10 +190,10 @@ export class TxtFSM {
     return result;
   }
 
-  parseTextToDicts(text: string, options: ParseOptions = {}): Array<Record<string, string>> {
+  parseTextToDicts(text: string, options: ParseOptions = {}): TextFSMRecord[] {
     const rows = this.parseText(text, options);
     return rows.map((row) => {
-      const entry: Record<string, string> = {};
+      const entry: TextFSMRecord = {};
       this.header.forEach((name, idx) => {
         entry[name] = row[idx] ?? '';
       });
@@ -268,10 +276,6 @@ export class TxtFSM {
     const isExplicitClear = captured === '';
 
     if (definition.options.includes('List')) {
-      if (isExplicitClear) {
-        this.applyExplicitClear(valueName, definition);
-        return;
-      }
       const current = this.recordBuffer[valueName];
       if (Array.isArray(current)) {
         current.push(captured);
@@ -287,7 +291,7 @@ export class TxtFSM {
       }
     }
 
-    if (isExplicitClear) {
+    if (isExplicitClear && !definition.options.includes('List')) {
       this.applyExplicitClear(valueName, definition);
       return;
     }
@@ -320,29 +324,34 @@ export class TxtFSM {
     }
   }
 
-  private buildRow(): string[] {
-    const result: string[] = new Array(this.valueNames.length).fill('');
+  private buildRow(): TextFSMRow {
+    const result: TextFSMRow = new Array<TextFSMValue>(this.valueNames.length).fill('');
     const filldownUpdates: Record<string, string> = {};
     const fillupUpdates: Record<string, string> = {};
 
     this.definition.values.forEach((value, index) => {
       const raw = this.recordBuffer[value.name];
       const hasExplicitClear = this.explicitClears.has(value.name);
-      let resolved: string;
+      let resolved: TextFSMValue;
 
       if (Array.isArray(raw)) {
-        resolved = raw.join(',');
+        resolved = [...raw];
       } else if (typeof raw === 'string') {
         resolved = raw;
       } else {
-        resolved = '';
+        resolved = value.options.includes('List') ? [] : '';
       }
 
-      if (!resolved && value.options.includes('Filldown') && !hasExplicitClear) {
+      if (
+        !hasValue(resolved) &&
+        !value.options.includes('List') &&
+        value.options.includes('Filldown') &&
+        !hasExplicitClear
+      ) {
         resolved = this.filldownValues[value.name] ?? '';
       }
 
-      if (!resolved && value.options.includes('Required')) {
+      if (!hasValue(resolved) && value.options.includes('Required')) {
         throw new SkipRecord(`Required value ${value.name} missing`);
       }
 
@@ -351,7 +360,7 @@ export class TxtFSM {
       if (value.options.includes('Filldown')) {
         if (hasExplicitClear) {
           this.filldownValues[value.name] = '';
-        } else if (resolved) {
+        } else if (typeof resolved === 'string' && resolved) {
           filldownUpdates[value.name] = resolved;
         }
       }
@@ -359,7 +368,7 @@ export class TxtFSM {
       if (value.options.includes('Fillup')) {
         if (hasExplicitClear) {
           this.fillupValues[value.name] = '';
-        } else if (resolved) {
+        } else if (typeof resolved === 'string' && resolved) {
           fillupUpdates[value.name] = resolved;
         }
       }
@@ -385,7 +394,9 @@ export class TxtFSM {
       this.explicitClears.delete(value.name);
 
       if (value.options.includes('List')) {
-        this.recordBuffer[value.name] = [];
+        if (!(keepFilldown && value.options.includes('Filldown'))) {
+          this.recordBuffer[value.name] = [];
+        }
         continue;
       }
 
@@ -421,7 +432,7 @@ export class TxtFSM {
     }
   }
 
-  private handleRecordOperation(operation: string, rows: string[][]): void {
+  private handleRecordOperation(operation: string, rows: TextFSMRow[]): void {
     const normalized = operation.toLowerCase();
 
     switch (normalized) {
@@ -465,7 +476,7 @@ export class TxtFSM {
     }
   }
 
-  private applyFillupUpdates(rows: string[][]): void {
+  private applyFillupUpdates(rows: TextFSMRow[]): void {
     if (this.pendingFillupAssignments.size === 0) {
       return;
     }
@@ -525,7 +536,7 @@ export class TxtFSM {
     return false;
   }
 
-  private registerFillupPendingRows(rows: string[][], rowIndex: number): void {
+  private registerFillupPendingRows(rows: TextFSMRow[], rowIndex: number): void {
     const row = rows[rowIndex];
     if (!row) {
       return;
@@ -541,7 +552,7 @@ export class TxtFSM {
         continue;
       }
 
-      if (row[columnIndex]) {
+      if (hasValue(row[columnIndex] ?? '')) {
         const pending = this.fillupPendingRowIndexes.get(value.name);
         pending?.delete(rowIndex);
         continue;
@@ -620,12 +631,12 @@ export class TxtFSM {
   }
 }
 
-export function parseText(template: string, input: string): string[][] {
+export function parseText(template: string, input: string): TextFSMRow[] {
   const machine = new TxtFSM(template);
   return machine.parseText(input);
 }
 
-export function parseTextToDicts(template: string, input: string): Array<Record<string, string>> {
+export function parseTextToDicts(template: string, input: string): TextFSMRecord[] {
   const machine = new TxtFSM(template);
   return machine.parseTextToDicts(input);
 }
