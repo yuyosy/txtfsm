@@ -30,13 +30,13 @@ JavaScript objects using TextFSM templates.
 
 ## Installation
 
-From npm:
+From [npm](https://www.npmjs.com/package/txtfsm):
 
 ```bash
 npm install txtfsm
 ```
 
-From JSR:
+From [JSR](https://jsr.io/@txtfsm/txtfsm):
 
 ```bash
 npx jsr add @txtfsm/txtfsm
