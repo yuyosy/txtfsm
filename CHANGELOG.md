@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refer to the GitHub main branch for the latest changes after release.
 
 
+## [0.2.0] - 2026-08-25
+
+### Fixed
+- Preserved `Value List` results as string arrays across parser APIs and `CliTable` output instead of flattening them into comma-delimited strings.
+- Updated tests and documentation so list-valued parser results are validated and described consistently.
+
+### Added
+- Added a documentation and playground site with getting started guides, live parsing examples, and API reference pages.
+- Added browser and Node.js examples that show how to load raw template text from textarea values or `.textfsm` files.
+
+
 ## [0.1.0] - 2026-08-16
 
 ### Added
