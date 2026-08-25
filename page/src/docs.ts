@@ -87,16 +87,15 @@ export const API_CLASSES: readonly ApiEntry[] = [
   },
   {
     name: 'TxtFSM.parseText',
-    signature: 'parser.parseText(input: string, options?: ParseOptions): string[][]',
+    signature: 'parser.parseText(input: string, options?: ParseOptions): TextFSMRow[]',
     description:
-      'Returns rows in the same column order as parser.header. Pass { eof: false } to disable the implicit EOF record operation.',
+      'Returns rows in the same column order as parser.header. Value List fields remain string arrays. Pass { eof: false } to disable the implicit EOF record operation.',
   },
   {
     name: 'TxtFSM.parseTextToDicts',
-    signature:
-      'parser.parseTextToDicts(input: string, options?: ParseOptions): Array<Record<string, string>>',
+    signature: 'parser.parseTextToDicts(input: string, options?: ParseOptions): TextFSMRecord[]',
     description:
-      'Returns records keyed by the template Value names. Pass { eof: false } to disable the implicit EOF record operation.',
+      'Returns records keyed by the template Value names, preserving Value List fields as string arrays. Pass { eof: false } to disable the implicit EOF record operation.',
   },
   {
     name: 'CliTable',
@@ -106,8 +105,7 @@ export const API_CLASSES: readonly ApiEntry[] = [
   },
   {
     name: 'CliTable.parseCmd',
-    signature:
-      'table.parseCmd(input: string, attributes: CliAttributes): Array<Record<string, string>>',
+    signature: 'table.parseCmd(input: string, attributes: CliAttributes): TextFSMRecord[]',
     description:
       'Selects templates using attributes such as Platform and Command. It supports abbreviated patterns such as sh[[ow]] and merges colon-separated templates using Value fields marked Key.',
   },
@@ -116,14 +114,13 @@ export const API_CLASSES: readonly ApiEntry[] = [
 export const API_FUNCTIONS: readonly ApiEntry[] = [
   {
     name: 'parseText',
-    signature: 'parseText(template: string, input: string): string[][]',
+    signature: 'parseText(template: string, input: string): TextFSMRow[]',
     description:
       'Creates a parser for one-off use and returns rows. Column order follows the Value declarations in the template.',
   },
   {
     name: 'parseTextToDicts',
-    signature:
-      'parseTextToDicts(template: string, input: string): Array<Record<string, string>>',
+    signature: 'parseTextToDicts(template: string, input: string): TextFSMRecord[]',
     description:
       'Creates a parser for one-off use and returns records keyed by the template Value names. This is the shortest path for most applications.',
   },
@@ -137,6 +134,13 @@ export const API_FUNCTIONS: readonly ApiEntry[] = [
 
 export const API_TYPES: readonly ApiEntry[] = [
   {
+    name: 'TextFSMValue, TextFSMRow, TextFSMRecord',
+    signature:
+      'type TextFSMValue = string | string[]; type TextFSMRow = TextFSMValue[]; type TextFSMRecord = Record<string, TextFSMValue>',
+    description:
+      'Result types shared by parser and CliTable APIs. Values declared with the List option are string arrays; other values are strings.',
+  },
+  {
     name: 'ParseOptions',
     signature: 'interface ParseOptions { readonly eof?: boolean }',
     description:
@@ -144,7 +148,8 @@ export const API_TYPES: readonly ApiEntry[] = [
   },
   {
     name: 'TemplateDefinition',
-    signature: '{ values: ValueDefinition[]; states: Map<string, StateDefinition>; startState: StateDefinition }',
+    signature:
+      '{ values: ValueDefinition[]; states: Map<string, StateDefinition>; startState: StateDefinition }',
     description:
       'The validated template structure returned by parseTemplate, including compiled rules in each state.',
   },

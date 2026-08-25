@@ -1,10 +1,11 @@
 import { TxtFSM } from '../../src/index.js';
+import type { TextFSMRecord, TextFSMRow } from '../../src/index.js';
 
 export interface TxtFSMParseSuccess {
   readonly ok: true;
   readonly header: readonly string[];
-  readonly rows: string[][];
-  readonly records: Array<Record<string, string>>;
+  readonly rows: TextFSMRow[];
+  readonly records: TextFSMRecord[];
 }
 
 export interface TxtFSMParseFailure {
@@ -18,9 +19,13 @@ export function parseTxtFSM(template: string, input: string): TxtFSMParseResult 
   try {
     const fsm = new TxtFSM(template);
     const rows = fsm.parseText(input);
-    const records = rows.map((row) =>
-      Object.fromEntries(fsm.header.map((name, index) => [name, row[index] ?? ''])),
-    );
+    const records = rows.map((row) => {
+      const record: TextFSMRecord = {};
+      fsm.header.forEach((name, index) => {
+        record[name] = row[index] ?? '';
+      });
+      return record;
+    });
 
     return { ok: true, header: fsm.header, rows, records };
   } catch (error) {

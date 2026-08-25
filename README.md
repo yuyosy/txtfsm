@@ -58,11 +58,14 @@ Create a reusable parser from a template:
 const fsm = new TxtFSM(template);
 
 const rows = fsm.parseText(input);
-// string[][], in the same column order as fsm.header
+// TextFSMRow[]; each field is a string or, for Value List, string[]
 
 const records = fsm.parseTextToDicts(input);
-// Array<Record<string, string>>
+// TextFSMRecord[]; Value List properties remain string[]
 ```
+
+For example, `Value List VLAN` produces `{ VLAN: ['10', '11'] }` rather than a
+comma-delimited string.
 
 Both parsing methods accept `{ eof: false }` as a second argument to disable the implicit EOF
 record operation.
