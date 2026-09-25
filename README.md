@@ -23,9 +23,10 @@ JavaScript objects using TextFSM templates.
 - Ship ESM, CommonJS, and TypeScript declarations
 
 
-## Requirements
+## Node.js support
 
-- Node.js 22.12 or later
+Node.js 22.12.0 or later is the supported range. Earlier versions may work, but have not been
+verified.
 
 
 ## Installation

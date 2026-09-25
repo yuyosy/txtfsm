@@ -1,10 +1,8 @@
-import { HighlightedCode } from '../components/highlighted-code';
 import {
   API_CLASSES,
   API_FUNCTIONS,
   API_TYPES,
   ERROR_TYPES,
-  TXT_FSM_ERROR_HANDLING_CODE,
   type ApiEntry,
 } from '../docs';
 
@@ -56,21 +54,6 @@ export function LibraryPage() {
       <section class="api-section" aria-labelledby="error-types-title">
         <h2 class="api-section-title" id="error-types-title">Error types</h2>
         <ApiList entries={ERROR_TYPES} />
-
-        <div class="api-error-handling" aria-labelledby="error-handling-title">
-          <div class="prose">
-            <h3 id="error-handling-title">Error handling</h3>
-            <p>
-              Catch the exported error classes when an application needs to distinguish invalid
-              templates from other failures. Each <code>TxtFSMError</code> includes a stable{' '}
-              <code>code</code> value.
-            </p>
-          </div>
-          <div class="code-example api-code-example">
-            <div class="code-label">error-handling.ts</div>
-            <HighlightedCode code={TXT_FSM_ERROR_HANDLING_CODE} language="javascript" />
-          </div>
-        </div>
       </section>
     </section>
   );

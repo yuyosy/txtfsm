@@ -2,18 +2,24 @@ import { useState } from 'preact/hooks';
 import { HighlightedCode } from '../components/highlighted-code';
 import { parseTxtFSM } from '../parse-txtfsm';
 import {
+  CLI_TABLE_EXAMPLE_CODE,
   FILE_READ_EXAMPLE_CODE,
   GETTING_STARTED_CODE,
-  TEMPLATE_ERROR_HANDLING_CODE,
   TEXTAREA_EXAMPLE_CODE,
   TEXTAREA_EXAMPLE_HTML,
 } from '../docs';
 import type { HighlightLanguage } from '../highlight';
-import { PRESETS, type Preset } from '../presets';
+import { PRESETS } from '../presets';
 
-interface ExampleDefinition extends Preset {
+interface ExampleDefinition {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
   readonly code: string;
+  readonly template?: string;
+  readonly input?: string;
   readonly html?: string;
+  readonly result?: string;
 }
 
 const STATUS_TEMPLATE = `Value NAME (\\S+)
@@ -23,13 +29,13 @@ Start
   ^\${NAME}\\s+\${STATUS} -> Record`;
 const STATUS_INPUT = `Gi0/1 up
 Gi0/2 down`;
+const CLI_TABLE_RESULT = JSON.stringify([{ ID: '1', STATE: 'up' }], undefined, 2);
 
 const EXAMPLES: readonly ExampleDefinition[] = [
   {
     id: 'textarea',
     name: 'Textarea',
     description: 'Read raw TextFSM and command output directly from browser textarea values.',
-    command: 'HTMLTextAreaElement.value',
     template: STATUS_TEMPLATE,
     input: STATUS_INPUT,
     code: TEXTAREA_EXAMPLE_CODE,
@@ -40,29 +46,23 @@ const EXAMPLES: readonly ExampleDefinition[] = [
     id: 'file-read',
     name: 'File read',
     description: 'Load a .textfsm template and captured command output as UTF-8 text in Node.js.',
-    command: "readFile(..., 'utf8')",
     code: FILE_READ_EXAMPLE_CODE,
   },
   {
     id: 'escaped-string',
     name: 'Escaped string',
     description: 'Embed a small template in JavaScript with escaped placeholders and backslashes.',
-    command: 'JavaScript template literal',
     template: STATUS_TEMPLATE,
     input: STATUS_INPUT,
     code: GETTING_STARTED_CODE,
   },
   {
-    id: 'error-handling',
-    name: 'Error handling',
-    description: 'Handle an invalid Value declaration with a typed template error.',
-    command: 'TxtFSMTemplateError',
-    template: `Value INTERFACE
-
-Start
-  ^\${INTERFACE} -> Record`,
-    input: 'GigabitEthernet0/0 is up',
-    code: TEMPLATE_ERROR_HANDLING_CODE,
+    id: 'cli-table',
+    name: 'CliTable',
+    description:
+      'Select a template from an index using platform and command attributes, then parse the command output.',
+    code: CLI_TABLE_EXAMPLE_CODE,
+    result: CLI_TABLE_RESULT,
   },
 ] as const;
 const initialExample = EXAMPLES[0];
@@ -80,18 +80,28 @@ export function ExamplesPage() {
   const [exampleId, setExampleId] = useState<string>(initialExample.id);
   const [activePanel, setActivePanel] = useState<ExamplePanel>('code');
   const examplePreset = EXAMPLES.find(({ id }) => id === exampleId) ?? initialExample;
-  const exampleResult = parseTxtFSM(examplePreset.template, examplePreset.input);
-  const visiblePanels = examplePreset.html ? PANELS : PANELS.filter(({ id }) => id !== 'html');
+  const exampleResult =
+    examplePreset.template !== undefined && examplePreset.input !== undefined
+      ? parseTxtFSM(examplePreset.template, examplePreset.input)
+      : undefined;
+  const visiblePanels =
+    examplePreset.id === 'cli-table'
+      ? PANELS.filter(({ id }) => id === 'code' || id === 'result')
+      : examplePreset.html
+        ? PANELS
+        : PANELS.filter(({ id }) => id !== 'html');
   const panelContent: Record<ExamplePanel, string> = {
     code: examplePreset.code,
     html: examplePreset.html ?? '',
-    template: examplePreset.template,
-    data: examplePreset.input,
-    result: JSON.stringify(
-      exampleResult.ok ? exampleResult.records : { error: exampleResult.message },
-      undefined,
-      2,
-    ),
+    template: examplePreset.template ?? '',
+    data: examplePreset.input ?? '',
+    result:
+      examplePreset.result ??
+      JSON.stringify(
+        exampleResult?.ok ? exampleResult.records : { error: exampleResult?.message },
+        undefined,
+        2,
+      ),
   };
   const panelLanguage: Partial<Record<ExamplePanel, HighlightLanguage>> = {
     code: 'javascript',
@@ -109,10 +119,10 @@ export function ExamplesPage() {
         </h1>
         <p>
           Compare browser textarea values, Node.js file loading, escaped JavaScript strings, and
-          typed error handling. Each example includes its code, raw template, source data, and
-          parsed result. The <code>.textfsm</code> extension used by File read follows the convention
-          used by <a href="https://github.com/networktocode/ntc-templates">NTC Templates</a> and is
-          not required by the parser.
+          index-based selection with CliTable. Select an example to inspect its code and result. The{' '}
+          <code>.textfsm</code> extension used by File read follows the convention used by{' '}
+          <a href="https://github.com/networktocode/ntc-templates">NTC Templates</a> and is not
+          required by the parser.
         </p>
       </header>
 
@@ -138,7 +148,6 @@ export function ExamplesPage() {
           <h2>{examplePreset.name}</h2>
           <p>{examplePreset.description}</p>
         </div>
-        <code>{examplePreset.command}</code>
       </div>
 
       <div class="example-detail">

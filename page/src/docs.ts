@@ -26,35 +26,34 @@ const records = parser.parseTextToDicts(data)
 
 console.table(records)`;
 
-export const TEMPLATE_ERROR_HANDLING_CODE = `import { TxtFSM, TxtFSMTemplateError } from 'txtfsm'
-
-// Template and data can come from a file or network request in Node.js,
-// or from an HTML textarea's value in the browser.
-
-try {
-  const parser = new TxtFSM(template)
-  const records = parser.parseTextToDicts(data)
-  console.table(records)
-} catch (error) {
-  if (error instanceof TxtFSMTemplateError) {
-    console.error(error.code, error.message)
-  }
-}`;
-
-export const TXT_FSM_ERROR_HANDLING_CODE = `import { TxtFSM, TxtFSMError } from 'txtfsm'
-
-// The template and data values could come from a file, a network request, Node.js,
-// or read an HTML textarea's value in the browser.
-
-try {
-  const parser = new TxtFSM(template)
-  const records = parser.parseTextToDicts(data)
-  console.table(records)
-} catch (error) {
-  if (error instanceof TxtFSMError) {
-    console.error(error.code, error.message)
-  }
-}`;
+export const CLI_TABLE_EXAMPLE_CODE = [
+  "import { CliTable } from 'txtfsm'",
+  '',
+  'const index = `Template, Platform, Command',
+  'show_items.textfsm, demo_os, sh[[ow]] it[[ems]]`',
+  '',
+  'const templates = new Map([',
+  '  [',
+  "    'show_items.textfsm',",
+  '    [',
+  "      'Value ID (\\\\d+)',",
+  "      'Value STATE (\\\\w+)',",
+  "      '',",
+  "      'Start',",
+  "      '  ^Item ${ID} ${STATE} -> Record',",
+  "    ].join('\\n'),",
+  '  ],',
+  '])',
+  '',
+  'const table = new CliTable(index, (name) => templates.get(name))',
+  "const records = table.parseCmd('Item 1 up', {",
+  "  Platform: 'demo_os',",
+  "  Command: 'show items',",
+  '})',
+  '',
+  'console.log(records)',
+  "// [{ ID: '1', STATE: 'up' }]",
+].join('\n');
 
 export const GETTING_STARTED_CODE = [
   "import { parseTextToDicts } from 'txtfsm'",
@@ -172,7 +171,7 @@ export const ERROR_TYPES: readonly ApiEntry[] = [
     name: 'TxtFSMError',
     signature: 'error instanceof TxtFSMError',
     description:
-      'Base parser error with a machine-readable code. TxtFSMTemplateError and UsageError extend this class.',
+      'Base class for parser and API-usage errors. Includes a stable machine-readable code; TxtFSMTemplateError and UsageError extend this class.',
   },
   {
     name: 'TxtFSMTemplateError',
@@ -182,11 +181,12 @@ export const ERROR_TYPES: readonly ApiEntry[] = [
   {
     name: 'UsageError',
     signature: "error.code === 'USAGE'",
-    description: 'Represents invalid API usage and carries the stable USAGE error code.',
+    description: 'Thrown for invalid API usage; its machine-readable code is USAGE.',
   },
   {
     name: 'CliTableError',
     signature: 'error instanceof CliTableError',
-    description: 'Thrown when an index is invalid or no matching template can be loaded.',
+    description:
+      'Separate from TxtFSMError. Thrown when an index is invalid or a matching template cannot be loaded.',
   },
 ];
