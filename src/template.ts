@@ -382,5 +382,16 @@ export function parseTemplate(source: string): TemplateDefinition {
     throw new TxtFSMTemplateError('Template is missing Start state.');
   }
 
+  for (const state of states.values()) {
+    for (const rule of state.rules) {
+      const target = rule.newState;
+      if (target && target !== 'End' && target !== 'EOF' && !states.has(target)) {
+        throw new TxtFSMTemplateError(
+          `State '${target}' not found, referenced in state '${state.name}'`,
+        );
+      }
+    }
+  }
+
   return { values, states, startState };
 }
